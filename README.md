@@ -1,4 +1,4 @@
-# chucks_jokes
+# ChucksJokes
 
 A simple Flutter App to get startet learning the BLoC pattern and have some fun using the open Chuck Norris API.
 
