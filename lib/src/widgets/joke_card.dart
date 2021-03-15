@@ -1,4 +1,4 @@
-import 'package:chucks_jokes/src/joke.dart';
+import 'package:chucks_jokes/src/data/joke.dart';
 import 'package:flutter/material.dart';
 
 class JokeCard extends StatelessWidget {

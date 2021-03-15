@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:chucks_jokes/src/joke.dart';
+import 'package:chucks_jokes/src/bloc/bloc.dart';
+import 'package:chucks_jokes/src/data/joke.dart';
 
 class JokeApiException implements Exception {
   String cause;
@@ -18,12 +19,13 @@ class JokeApiException implements Exception {
 
 enum ButtonAction { next, previous }
 
-class JokeBloc {
-  Stream<Joke> get joke => _jokeSubject.stream;
+class JokeBloc implements Bloc {
   final _jokeSubject = BehaviorSubject<Joke>();
+  Stream<Joke> get joke => _jokeSubject.stream;
 
-  StreamSink<ButtonAction> get control => _controlController.sink;
   final _controlController = StreamController<ButtonAction>();
+  StreamSink<ButtonAction> get control => _controlController.sink;
+
 
   List<String> history = [];
 
@@ -84,5 +86,10 @@ class JokeBloc {
       throw JokeApiException('Cannot fetch the joke');
 
     return Joke.fromJson(json.decode(response.body));
+  }
+
+  @override
+  void dispose() {
+    _controlController.close();
   }
 }

@@ -1,40 +1,34 @@
+import 'package:chucks_jokes/src/bloc/bloc_provider.dart';
+import 'package:chucks_jokes/src/data/joke.dart';
 import 'package:chucks_jokes/src/widgets/joke_card.dart';
 import 'package:flutter/material.dart';
 
-import 'package:chucks_jokes/src/joke.dart';
-import 'package:chucks_jokes/src/joke_bloc.dart';
+import 'package:chucks_jokes/src/bloc/joke_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 void main() {
-  final jokeBloc = JokeBloc();
-  runApp(MyApp(jokeBloc: jokeBloc));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final JokeBloc jokeBloc;
-
-  MyApp({Key key, this.jokeBloc}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.cyan,
-      ),
-      darkTheme: ThemeData.dark(),
-      home: MyHomePage(
-        jokeBloc: jokeBloc,
+    return BlocProvider(
+      bloc: JokeBloc(),
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.cyan,
+        ),
+        darkTheme: ThemeData.dark(),
+        home: MyHomePage(),
       ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  final JokeBloc jokeBloc;
-
-  MyHomePage({Key key, this.jokeBloc}) : super(key: key);
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -52,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           StreamBuilder<Joke>(
-              stream: widget.jokeBloc.joke,
+              stream: BlocProvider.of<JokeBloc>(context).joke,
               builder: (context, snapshot) {
                 if (!snapshot.hasData)
                   return Column(
@@ -86,12 +80,12 @@ class _MyHomePageState extends State<MyHomePage> {
               IconButton(
                   icon: Icon(Icons.arrow_back_ios_rounded),
                   onPressed: () {
-                    widget.jokeBloc.control.add(ButtonAction.previous);
+                    BlocProvider.of<JokeBloc>(context).control.add(ButtonAction.previous);
                   }),
               IconButton(
                   icon: Icon(Icons.arrow_forward_ios_rounded),
                   onPressed: () {
-                    widget.jokeBloc.control.add(ButtonAction.next);
+                    BlocProvider.of<JokeBloc>(context).control.add(ButtonAction.next);
                   })
             ],
           )
