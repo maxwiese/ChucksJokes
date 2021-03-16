@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,42 +20,57 @@ class JokeApiException implements Exception {
 
 enum ButtonAction { next, previous }
 
+enum CategorySelector { select }
+
 class JokeBloc implements Bloc {
   final _jokeSubject = BehaviorSubject<Joke>();
   Stream<Joke> get joke => _jokeSubject.stream;
 
+  final _jokeCategorySubject = BehaviorSubject<JokeCategory>();
+  Stream<JokeCategory> get jokeCategory => _jokeCategorySubject.stream;
+
   final _controlController = StreamController<ButtonAction>();
   StreamSink<ButtonAction> get control => _controlController.sink;
 
+  final _categoryController = StreamController<JokeCategory>();
+  StreamSink<JokeCategory> get selectCategory => _categoryController.sink;
 
-  List<String> history = [];
+  List<String> _history = [];
+  JokeCategory _category = JokeCategory.random;
 
   JokeBloc() {
-    _newJoke();
+    _newJoke(category: _category);
 
     _controlController.stream.listen((event) {
       if (event == ButtonAction.next) {
-        _newJoke();
+        _newJoke(category: _category);
       } else {
         _previousJoke();
       }
     });
+
+    _categoryController.stream.listen((event) {
+      _category = event;
+      _newJoke(category: _category);
+    });
   }
 
-  void _newJoke() async {
-    Joke joke = await _getRandomJoke();
-    history.add(joke.id);
+  void _newJoke({JokeCategory category}) async {
+    Joke joke = await _getRandomJoke(category: _category);
+    _history.add(joke.id);
     _jokeSubject.add(joke);
+    _jokeCategorySubject.add(_category);
   }
 
   void _previousJoke() async {
-    if (history.isEmpty || history.length == 1) return;
+    if (_history.isEmpty || _history.length == 1) return;
 
-    history.removeLast();
-    final String lastId = history.last;
+    _history.removeLast();
+    final String lastId = _history.last;
 
     Joke joke = await _getJoke(lastId);
     _jokeSubject.add(joke);
+    _jokeCategorySubject.add(_category);
   }
 
   Future<Joke> _getRandomJoke({JokeCategory category}) async {
@@ -63,8 +79,8 @@ class JokeBloc implements Bloc {
 
     Uri url = Uri.https(base, path);
 
-    if (category != null)
-      url = Uri.https(base, path, {'categroy': '$category'});
+    if (category != JokeCategory.random)
+      url = Uri.https(base, path, {'category': '${describeEnum(category)}'});
 
     final response = await http.get(url);
 
@@ -91,5 +107,6 @@ class JokeBloc implements Bloc {
   @override
   void dispose() {
     _controlController.close();
+    _categoryController.close();
   }
 }
